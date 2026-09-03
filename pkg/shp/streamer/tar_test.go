@@ -3,6 +3,7 @@ package streamer
 import (
 	"archive/tar"
 	"io"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -26,6 +27,7 @@ func Test_Tar(t *testing.T) {
 
 	tarReader := tar.NewReader(reader)
 	counter := 0
+	foundGitIgnore := false
 	for {
 		header, err := tarReader.Next()
 		if err != nil {
@@ -37,10 +39,22 @@ func Test_Tar(t *testing.T) {
 		counter++
 		name := header.Name
 
+		cleanName := filepath.ToSlash(name)
+		// On windows, trimPrefix might fail to trim the prefix cleanly due to slash mismatch, leaving ../../../ prefix.
+		if cleanName == ".gitignore" || strings.HasSuffix(cleanName, "/.gitignore") {
+			// Ensure it's not a vendor or nested gitignore
+			if !strings.Contains(cleanName, "vendor/") {
+				foundGitIgnore = true
+			}
+		}
+
 		// making sure that undesired entries are not present on the list of files caputured by the
 		// tar helper
-		g.Expect(strings.HasPrefix(name, ".git/")).To(o.BeFalse())
-		g.Expect(strings.HasPrefix(name, "_output/")).To(o.BeFalse())
+		if strings.Contains(cleanName, ".git/") && !strings.Contains(cleanName, ".gitignore") {
+			g.Expect(strings.Contains(cleanName, ".git/")).To(o.BeFalse(), "should not contain .git/")
+		}
+		g.Expect(strings.HasPrefix(cleanName, "_output/")).To(o.BeFalse())
 	}
+	g.Expect(foundGitIgnore).To(o.BeTrue(), "expected .gitignore to be included in the tarball")
 	g.Expect(counter > 10).To(o.BeTrue())
 }

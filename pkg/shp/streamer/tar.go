@@ -24,13 +24,18 @@ func (t *Tar) skipPath(fpath string, stat fs.FileInfo) bool {
 	if !stat.Mode().IsRegular() {
 		return true
 	}
-	if strings.HasPrefix(fpath, path.Join(t.src, ".git")) {
+	cleanFpath := filepath.ToSlash(fpath)
+	cleanSrc := filepath.ToSlash(filepath.Clean(t.src))
+	gitDir := path.Join(cleanSrc, ".git")
+
+	if cleanFpath == gitDir || strings.HasPrefix(cleanFpath, gitDir+"/") {
 		return true
 	}
-	if t.gitIgnore == nil {
-		return false
+	
+	if t.gitIgnore != nil {
+		return t.gitIgnore.MatchesPath(fpath)
 	}
-	return t.gitIgnore.MatchesPath(fpath)
+	return false
 }
 
 // Create the actual tar by inspecting all files in source path, skipping some.
