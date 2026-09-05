@@ -50,9 +50,7 @@ func Test_Tar(t *testing.T) {
 
 		// making sure that undesired entries are not present on the list of files caputured by the
 		// tar helper
-		if strings.Contains(cleanName, ".git/") && !strings.Contains(cleanName, ".gitignore") {
-			g.Expect(strings.Contains(cleanName, ".git/")).To(o.BeFalse(), "should not contain .git/")
-		}
+		g.Expect(strings.Split(cleanName, "/")).NotTo(o.ContainElement(".git"), "should not contain a .git path component")
 		g.Expect(strings.HasPrefix(cleanName, "_output/")).To(o.BeFalse())
 	}
 	g.Expect(foundGitIgnore).To(o.BeTrue(), "expected .gitignore to be included in the tarball")
