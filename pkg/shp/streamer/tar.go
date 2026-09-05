@@ -24,14 +24,14 @@ func (t *Tar) skipPath(fpath string, stat fs.FileInfo) bool {
 	if !stat.Mode().IsRegular() {
 		return true
 	}
-	cleanFpath := filepath.ToSlash(fpath)
-	cleanSrc := filepath.ToSlash(filepath.Clean(t.src))
-	gitDir := path.Join(cleanSrc, ".git")
-
-	if cleanFpath == gitDir || strings.HasPrefix(cleanFpath, gitDir+"/") {
-		return true
+	relPath, err := filepath.Rel(t.src, fpath)
+	if err == nil {
+		cleanPath := filepath.ToSlash(relPath)
+		if cleanPath == ".git" || strings.HasPrefix(cleanPath, ".git/") {
+			return true
+		}
 	}
-	
+
 	if t.gitIgnore != nil {
 		return t.gitIgnore.MatchesPath(fpath)
 	}
