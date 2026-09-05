@@ -40,12 +40,8 @@ func Test_Tar(t *testing.T) {
 		name := header.Name
 
 		cleanName := filepath.ToSlash(name)
-		// On windows, trimPrefix might fail to trim the prefix cleanly due to slash mismatch, leaving ../../../ prefix.
-		if cleanName == ".gitignore" || strings.HasSuffix(cleanName, "/.gitignore") {
-			// Ensure it's not a vendor or nested gitignore
-			if !strings.Contains(cleanName, "vendor/") {
-				foundGitIgnore = true
-			}
+		if cleanName == ".gitignore" {
+			foundGitIgnore = true
 		}
 
 		// making sure that undesired entries are not present on the list of files caputured by the
