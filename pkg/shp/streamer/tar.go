@@ -26,8 +26,8 @@ func (t *Tar) skipPath(fpath string, stat fs.FileInfo) bool {
 	}
 	relPath, err := filepath.Rel(t.src, fpath)
 	if err == nil {
-		cleanPath := filepath.ToSlash(relPath)
-		if cleanPath == ".git" || strings.HasPrefix(cleanPath, ".git/") {
+		cleanPath := "/" + filepath.ToSlash(relPath) + "/"
+		if strings.Contains(cleanPath, "/.git/") {
 			return true
 		}
 	}
